@@ -232,6 +232,11 @@ Upload all three tarballs to GitHub Releases, then update `PREBUILT_URL` and `SC
 GPL-3.0 — same as [Norns](https://github.com/monome/norns).
 
 
+
+## Special Thanks
+
+Huge thanks to everyone that has contributed, including but not limited to: charlesvestal, seajaysec, tomduncalf, and timncox!
+
 ## AI Assistance Disclaimer
 
 This module is part of Move Everything and was developed with AI assistance, including Claude and other AI assistants.
