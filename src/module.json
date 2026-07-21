@@ -1,9 +1,10 @@
 {
   "id": "norns",
   "name": "Norns",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Monome Norns — SuperCollider + Lua sound computer on Move",
   "author": "DJ Hard Rich",
   "component_type": "tool",
-  "standalone": true
+  "standalone": true,
+  "requires_path": "/data/UserData/schwung/bin/pw-helper-norns"
 }

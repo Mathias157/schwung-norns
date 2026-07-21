@@ -1,6 +1,8 @@
 #!/bin/sh
 # stop-norns.sh — Stop Norns stack in the chroot
 # Called by pw-helper: stop-norns.sh <slot>
+
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
 SLOT="${1:-1}"
 CHROOT="/data/UserData/pw-chroot"
 PID_DIR="/tmp/norns-pids-${SLOT}"

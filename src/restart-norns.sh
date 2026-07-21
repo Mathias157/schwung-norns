@@ -1,5 +1,7 @@
 #!/bin/sh
 # restart-norns.sh — Restart Norns stack in the chroot
+
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
 # Use this instead of ";restart" in Maiden (which requires systemd/dbus).
 #
 # Usage:  restart-norns.sh [slot]

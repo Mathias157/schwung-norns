@@ -1,0 +1,7 @@
+{
+  "version": "0.4.3",
+  "download_url": "https://github.com/djhardrich/schwung-norns/releases/download/v0.4.3/norns-module.tar.gz",
+  "repo_url": "https://github.com/djhardrich/schwung-norns",
+  "requires": "Requires RNBO Takeover and a one-time Norns Debian chroot setup; see the repository README.",
+  "post_install": "One-time setup: ssh root@move.local 'sh /data/UserData/schwung/modules/tools/norns/bootstrap-norns.sh'"
+}

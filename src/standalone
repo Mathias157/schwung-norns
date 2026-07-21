@@ -1,5 +1,18 @@
 #!/bin/sh
 LOG=/tmp/norns-standalone.log
+MODULE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 kill -9 $(pidof MoveOriginal Move MoveLauncher MoveMessageDisplay) 2>/dev/null
 sleep 1
-exec "$(dirname "$0")/norns_bin" "$@" >> "$LOG" 2>&1
+
+# Normal Schwung launches already run as `ableton` (uid 1000), which matches
+# the chroot's `move` uid and RNBO JACK socket.  Recovery/SSH launches may run
+# as root, so only drop privileges when a user switch is actually needed.
+if [ "$(id -un)" = "ableton" ]; then
+    exec "$MODULE_DIR/norns_bin" "$@" >> "$LOG" 2>&1
+fi
+
+# A privileged recovery launch would otherwise create the shared log as root
+# and prevent the next normal Schwung launch from opening it.
+touch "$LOG" 2>/dev/null || true
+chown ableton:users "$LOG" 2>/dev/null || true
+exec su -s /bin/sh ableton -c "exec '$MODULE_DIR/norns_bin'" >> "$LOG" 2>&1

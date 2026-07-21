@@ -1,0 +1,55 @@
+name: Release Norns module
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify tag matches module version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          MODULE_VERSION="$(jq -r '.version' src/module.json)"
+          if [ "$TAG_VERSION" != "$MODULE_VERSION" ]; then
+            echo "Tag ${TAG_VERSION} does not match module.json ${MODULE_VERSION}" >&2
+            exit 1
+          fi
+
+      - name: Build module
+        run: ./scripts/build.sh
+
+      - name: Publish module archive
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/norns-module.tar.gz
+
+      - name: Update Store release metadata
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          VERSION="${RELEASE_VERSION#v}"
+          git fetch origin main
+          git checkout -B main origin/main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cat > release.json <<EOF
+          {
+            "version": "${VERSION}",
+            "download_url": "https://github.com/${REPOSITORY}/releases/download/${RELEASE_VERSION}/norns-module.tar.gz",
+            "repo_url": "https://github.com/${REPOSITORY}",
+            "requires": "Requires RNBO Takeover and a one-time Norns Debian chroot setup; see the repository README.",
+            "post_install": "One-time setup: ssh root@move.local 'sh /data/UserData/schwung/modules/tools/norns/bootstrap-norns.sh'"
+          }
+          EOF
+          git add release.json
+          git commit -m "chore: update release metadata for ${RELEASE_VERSION}" || exit 0
+          git push origin main

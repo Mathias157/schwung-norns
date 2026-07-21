@@ -3,6 +3,11 @@
 # Called by pw-helper: start-norns.sh <fifo_playback_path> <slot>
 set -e
 
+# The setuid helper inherits the standalone bridge user's restricted PATH.
+# AbletonOS keeps privileged utilities such as chroot in /usr/sbin, so make
+# those paths explicit before any chroot lifecycle work.
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
 FIFO_PLAYBACK="$1"
 SLOT="${2:-1}"
 CHROOT="/data/UserData/pw-chroot"
@@ -251,6 +256,17 @@ s.close()
             for pid in $(chroot "$CHROOT" pgrep -x "$proc" 2>/dev/null); do
                 chrt -f -p 70 "$pid" 2>/dev/null && echo "RT FIFO set for $proc (pid $pid)"
             done
+        done
+        # The Move-side bridge must use uid 1000 so it can share RNBO JACK's
+        # socket with the chroot clients.  Promote each of its already-created
+        # threads from this root helper so the SPI and JACK callback paths are
+        # still realtime even though the bridge itself is unprivileged.
+        for pid in $(pidof norns_bin 2>/dev/null); do
+            for task in /proc/$pid/task/*; do
+                tid=${task##*/}
+                chrt -f -p 70 "$tid" 2>/dev/null || true
+            done
+            echo "RT FIFO set for norns bridge (pid $pid)"
         done
         for proc in matron sclang; do
             for pid in $(chroot "$CHROOT" pgrep -x "$proc" 2>/dev/null); do

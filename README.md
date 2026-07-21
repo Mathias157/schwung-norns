@@ -4,9 +4,33 @@ Run [Monome Norns](https://monome.org/docs/norns/) — the open-source sound com
 
 Norns runs inside a Debian chroot alongside Move's native firmware. Audio, MIDI, screen, and controls are bridged between the two systems through the Move's JACK2 audio server (provided by RNBO Takeover).
 
-## Quick Install Instructions (tested with Linux and Mac OS and Move 2.0 beta)
+## Schwung Store
 
-1. Install [Schwung](https://github.com/charlesvestal/schwung-installer)
+Norns v0.4.3 can be installed and updated from the Schwung Store. The Store
+installs the module itself, but AbletonOS does not allow it to create the
+privileged helper or the Debian chroot that Norns needs.
+
+Before installing Norns from the Store:
+
+1. Install RNBO Takeover for Move.
+2. Install the Norns Debian chroot once. The quick installer below handles a
+   clean device, or you can keep an existing `/data/UserData/pw-chroot`.
+3. Install **Norns** from the Schwung Manager, then run the one-time bootstrap:
+
+```bash
+ssh root@move.local 'sh /data/UserData/schwung/modules/tools/norns/bootstrap-norns.sh'
+```
+
+After the bootstrap, future Norns module updates can be installed directly
+from the Store. The bootstrap command is also shown on Move after installation.
+
+v0.4.3 was tested on Move firmware 2.1.0b2 with Schwung 0.11.6 and RNBO
+1.4.3-alpha.1.
+
+## Quick Install Instructions (tested with Linux and macOS)
+
+1. Install [Schwung](https://github.com/charlesvestal/schwung-installer) and
+   RNBO Takeover for Move.
 2. Run the quick install script:
 
 ```bash
@@ -17,7 +41,8 @@ Norns runs inside a Debian chroot alongside Move's native firmware. Audio, MIDI,
 
 1. **[Schwung](https://github.com/charlesvestal/schwung)** — the host runtime that loads third-party modules on Move hardware.
 
-2. **[Schwung Installer](https://github.com/charlesvestal/schwung-installer)** — provides the Debian chroot (either command-line or desktop variant). Install using the install script from that repo before proceeding.
+2. **Debian chroot** — provided by the quick installer or an existing
+   schwung-chroot-linux installation at `/data/UserData/pw-chroot`.
 
 3. **[RNBO Takeover for Move](https://cycling74.com/products/rnbo)** — provides the JACK2 audio server (`/data/UserData/rnbo/bin/jackd`) that norns connects to for audio and MIDI I/O. Must be installed before running schwung-norns.
 
