@@ -52,8 +52,10 @@ cp src/standalone        build/module/
 cp src/start-norns.sh    build/module/
 cp src/stop-norns.sh     build/module/
 cp src/restart-norns.sh  build/module/
+cp scripts/bootstrap-norns.sh build/module/
 chmod +x build/module/standalone build/module/norns_bin \
-         build/module/start-norns.sh build/module/stop-norns.sh build/module/restart-norns.sh
+         build/module/start-norns.sh build/module/stop-norns.sh build/module/restart-norns.sh \
+         build/module/bootstrap-norns.sh
 
 mkdir -p build/module/bin
 cp build/pw-helper           build/module/bin/
@@ -62,6 +64,7 @@ cp build/norns-input-bridge  build/module/bin/
 mkdir -p build/module/patches build/module/scripts
 cp patches/apply-move-patches.sh build/module/patches/ 2>/dev/null || true
 cp scripts/build-sc-plugins.sh   build/module/scripts/ 2>/dev/null || true
+cp scripts/setup-norns.sh        build/module/scripts/
 
 # ── Package ──
 mkdir -p dist
