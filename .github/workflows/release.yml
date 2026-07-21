@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build (e.g. v0.4.3). Must already exist."
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -12,11 +18,24 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ref=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.ref }}
 
       - name: Verify tag matches module version
+        env:
+          RELEASE_VERSION: ${{ steps.tag.outputs.ref }}
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          TAG_VERSION="${RELEASE_VERSION#v}"
           MODULE_VERSION="$(jq -r '.version' src/module.json)"
           if [ "$TAG_VERSION" != "$MODULE_VERSION" ]; then
             echo "Tag ${TAG_VERSION} does not match module.json ${MODULE_VERSION}" >&2
@@ -29,11 +48,12 @@ jobs:
       - name: Publish module archive
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.ref }}
           files: dist/norns-module.tar.gz
 
       - name: Update Store release metadata
         env:
-          RELEASE_VERSION: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ steps.tag.outputs.ref }}
           REPOSITORY: ${{ github.repository }}
         run: |
           VERSION="${RELEASE_VERSION#v}"
