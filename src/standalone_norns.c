@@ -915,30 +915,6 @@ static void push_display_slice(void) {
 
 /* ── Audio: SPI <-> JACK ring ── */
 
-/* There is no hardware signal available over this SPI link (and none on the
- * Pi's own GPIOs either) that says whether something is actually plugged
- * into line-in. Left floating, the ADC channel picks up loud, intermittent
- * noise bursts -- measured hitting full digital scale, sustained for over
- * half a second at a stretch -- and its loudness distribution overlaps
- * real quiet-to-moderate audio too much for a level-based gate to tell
- * them apart reliably. So forwarding is opt-in: touch this file when you
- * actually have a source connected, remove it otherwise. */
-#define AUDIO_IN_ENABLE_FLAG MODULE_DIR "/line_in_enabled"
-
-static int audio_in_allowed(void) {
-    static uint64_t last_check_ms = 0;
-    static int cached = 0;
-    uint64_t now = now_ms();
-    /* Re-stat a few times a second so toggling the flag takes effect
-     * without needing to restart norns, at negligible cost to the SPI
-     * cycle budget. */
-    if (now - last_check_ms > 500) {
-        cached = (access(AUDIO_IN_ENABLE_FLAG, F_OK) == 0);
-        last_check_ms = now;
-    }
-    return cached;
-}
-
 static void process_audio(void) {
     int16_t *spi_out = (int16_t *)(g_spi_buf + SCHWUNG_OFF_OUT_AUDIO);
     int16_t *spi_in = (int16_t *)(g_spi_buf + SCHWUNG_OFF_IN_AUDIO);
@@ -959,15 +935,17 @@ static void process_audio(void) {
     }
 
     /* SPI audio in (Move line/mic input) -> ring_in -> crone input.
-     * Mirrors the ring_out path above, gated by audio_in_allowed() --
-     * see the comment above it for why this isn't unconditional. */
+     * Mirrors the ring_out path above. Always on: there's no hardware
+     * signal available (checked the SPI buffer layout, the Pi's own
+     * GPIOs, and ALSA/extcon -- none exist) that says whether something
+     * is actually connected, and a level-based gate isn't reliable either
+     * (floating input noise gets as loud and sustained as real audio).
+     * Safety belongs at norns' own Input Level control instead (crone's
+     * single adc gain stage, SYSTEM > AUDIO > LEVELS > INPUT) -- see the
+     * state.lua default patch in apply-move-patches.sh. */
     if (g_ring_in) {
         int16_t buf[256];  /* 128 stereo frames */
-        if (audio_in_allowed()) {
-            memcpy(buf, spi_in, SCHWUNG_AUDIO_FRAMES * 2 * sizeof(int16_t));
-        } else {
-            memset(buf, 0, sizeof(buf));
-        }
+        memcpy(buf, spi_in, SCHWUNG_AUDIO_FRAMES * 2 * sizeof(int16_t));
         shm_write(g_ring_in, buf, SCHWUNG_AUDIO_FRAMES);
     }
 }
