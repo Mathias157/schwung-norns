@@ -52,9 +52,12 @@ cp src/standalone        build/module/
 cp src/start-norns.sh    build/module/
 cp src/stop-norns.sh     build/module/
 cp src/restart-norns.sh  build/module/
+cp src/enable-line-in.sh  build/module/
+cp src/disable-line-in.sh build/module/
 cp scripts/bootstrap-norns.sh build/module/
 chmod +x build/module/standalone build/module/norns_bin \
          build/module/start-norns.sh build/module/stop-norns.sh build/module/restart-norns.sh \
+         build/module/enable-line-in.sh build/module/disable-line-in.sh \
          build/module/bootstrap-norns.sh
 
 mkdir -p build/module/bin
