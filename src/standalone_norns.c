@@ -934,10 +934,18 @@ static void process_audio(void) {
         }
     }
 
-    /* SPI audio in is NOT forwarded to crone — doing so would create a
-     * hardware feedback loop (mic -> crone -> speaker -> mic).
-     * Audio input for norns scripts comes via JACK directly. */
-    (void)spi_in;
+    /* SPI audio in (Move line/mic input) -> ring_in -> crone input.
+     * Mirrors the ring_out path above. A cable in the line-in jack isn't
+     * an open mic listening to the speaker, so the feedback concern this
+     * used to be skipped for doesn't apply to line-in use; any monitoring
+     * feedback from the built-in mic is the same hazard as on any audio
+     * device with simultaneous mic input and speaker output, and is left
+     * to the user to manage via levels, same as on the stock Move engine. */
+    if (g_ring_in) {
+        int16_t buf[256];  /* 128 stereo frames */
+        memcpy(buf, spi_in, SCHWUNG_AUDIO_FRAMES * 2 * sizeof(int16_t));
+        shm_write(g_ring_in, buf, SCHWUNG_AUDIO_FRAMES);
+    }
 }
 
 /* ── Main ── */
